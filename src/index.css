@@ -1,0 +1,83 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    border-radius: 0 !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-parchment text-ink;
+    font-family: 'IBM Plex Mono', 'Courier New', monospace;
+    overscroll-behavior: none;
+  }
+
+  /* Safe area insets for PWA */
+  .pt-safe-top {
+    padding-top: max(env(safe-area-inset-top), 1rem);
+  }
+
+  .pb-safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+  }
+
+  /* Remove default input styles */
+  input,
+  textarea,
+  select {
+    @apply outline-none;
+    -webkit-appearance: none;
+  }
+
+  /* Range input */
+  input[type='range'] {
+    -webkit-appearance: none;
+    height: 2px;
+    background: #C8C0B4;
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #1A1714;
+    border-radius: 0;
+    cursor: pointer;
+  }
+
+  input[type='range']::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: #1A1714;
+    border-radius: 0;
+    border: none;
+    cursor: pointer;
+  }
+
+  /* Prevent iOS bounce */
+  #root {
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+
+  .font-mono {
+    font-family: 'IBM Plex Mono', 'Courier New', monospace;
+  }
+}

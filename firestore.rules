@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users: only the owner can read/write their own doc
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Sessions: anyone authenticated can read; only host can update status
+    match /sessions/{sessionId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && (
+        // Host can update anything
+        resource.data.hostId == request.auth.uid ||
+        // Anyone can update winnerId/winnerName when session is in voting state
+        (resource.data.status == 'voting' && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['winnerId', 'winnerName', 'status']))
+      );
+    }
+
+    // Participants: anyone can read; users can only write their own doc
+    match /participants/{sessionId}/users/{participantId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == participantId;
+      allow update: if request.auth != null && request.auth.uid == participantId;
+    }
+
+    // Polls: anyone can read; participants can write their vote once per round
+    match /polls/{sessionId}/rounds/{roundNumber} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && (
+        // Can only add/change own vote key
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['votes.' + request.auth.uid])
+      );
+    }
+  }
+}

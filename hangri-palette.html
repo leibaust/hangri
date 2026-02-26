@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HANGRI — Design System Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; border-radius: 0 !important; }
+
+  :root {
+    --parchment: #F5F0E8;
+    --surface: #EDE8DE;
+    --ink: #1A1714;
+    --muted: #8C8278;
+    --rule: #C8C0B4;
+    --olive: #4A5240;
+    --sienna: #8B3A2A;
+    --amber: #C17F3E;
+  }
+
+  body {
+    background: var(--parchment);
+    color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 100vh;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    padding: 40px 32px 32px;
+    border-bottom: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+  }
+  .wordmark {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 72px;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .header-meta {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+    text-align: right;
+    line-height: 1.8;
+  }
+
+  /* ── LAYOUT ── */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    border-left: 1px solid var(--rule);
+  }
+  .grid > * {
+    border-right: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .col-2 { grid-column: span 2; }
+  .col-3 { grid-column: span 3; }
+
+  /* ── SWIPE CARDS SECTION ── */
+  .section-label {
+    font-size: 10px;
+    text-transform: lowercase;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    padding: 16px 20px 8px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .cards-area {
+    padding: 32px 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    justify-content: center;
+    background: var(--surface);
+    position: relative;
+  }
+
+  .swipe-card {
+    width: 200px;
+    height: 280px;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .swipe-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: saturate(0.7);
+  }
+  .card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(26,23,20,0.75) 0%, rgba(26,23,20,0.1) 55%, transparent 100%);
+  }
+  .card-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px;
+  }
+  .card-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--parchment);
+    line-height: 1.1;
+    letter-spacing: 0.04em;
+  }
+  .card-rule {
+    width: 100%;
+    height: 1px;
+    background: rgba(245,240,232,0.35);
+    margin: 8px 0;
+  }
+  .card-meta {
+    font-size: 10px;
+    color: rgba(245,240,232,0.7);
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+    line-height: 1.7;
+  }
+
+  /* swipe indicator overlays */
+  .card-yes .card-overlay {
+    background: linear-gradient(to top, rgba(26,23,20,0.75), rgba(74,82,64,0.25) 70%, transparent);
+  }
+  .card-no .card-overlay {
+    background: linear-gradient(to top, rgba(26,23,20,0.75), rgba(139,58,42,0.25) 70%, transparent);
+  }
+  .swipe-badge {
+    position: absolute;
+    top: 16px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 2px 10px;
+    border: 2px solid currentColor;
+    line-height: 1.2;
+  }
+  .badge-yes { left: 12px; color: var(--olive); }
+  .badge-no { right: 12px; color: var(--sienna); }
+
+  /* ── PALETTE SWATCHES ── */
+  .palette-area {
+    padding: 24px;
+  }
+  .palette-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 20px;
+    color: var(--ink);
+  }
+  .swatches {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--rule);
+  }
+  .swatch {
+    padding: 18px 14px;
+    border-right: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .swatch:nth-child(even) { border-right: none; }
+  .swatch-dot {
+    width: 32px;
+    height: 32px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(26,23,20,0.15);
+  }
+  .swatch-name {
+    font-size: 10px;
+    text-transform: lowercase;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+  .swatch-hex {
+    font-size: 12px;
+    color: var(--ink);
+    margin-top: 2px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── TYPOGRAPHY SECTION ── */
+  .type-area {
+    padding: 24px;
+    border-top: 1px solid var(--rule);
+  }
+  .type-specimen {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .type-specimen:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .type-tag {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: lowercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .t-display {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px;
+    font-weight: 300;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .t-h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+  }
+  .t-body {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1.7;
+    text-transform: lowercase;
+  }
+  .t-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: lowercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── UI COMPONENTS ── */
+  .ui-area {
+    padding: 24px;
+  }
+  .ui-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: lowercase;
+    letter-spacing: 0.06em;
+    padding: 10px 20px;
+    cursor: pointer;
+    border: none;
+    transition: background 0.15s, color 0.15s;
+  }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--parchment);
+    border: 2px solid var(--ink);
+  }
+  .btn-primary:hover { background: var(--parchment); color: var(--ink); }
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--ink);
+  }
+  .btn-secondary:hover { background: var(--surface); }
+  .btn-accent {
+    background: var(--amber);
+    color: var(--ink);
+    border: 2px solid var(--amber);
+  }
+  .btn-yes {
+    background: var(--olive);
+    color: var(--parchment);
+    border: 2px solid var(--olive);
+    letter-spacing: 0.14em;
+  }
+  .btn-no {
+    background: var(--sienna);
+    color: var(--parchment);
+    border: 2px solid var(--sienna);
+    letter-spacing: 0.14em;
+  }
+
+  /* ── WINNER STRIP ── */
+  .winner-strip {
+    background: var(--ink);
+    padding: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .winner-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: lowercase;
+    letter-spacing: 0.1em;
+  }
+  .winner-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px;
+    font-weight: 300;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--amber);
+    line-height: 1;
+  }
+  .winner-meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: lowercase;
+    line-height: 2;
+    text-align: right;
+  }
+
+  /* ── FILTER PILL ROW ── */
+  .filter-row {
+    padding: 16px 24px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--rule);
+    background: var(--surface);
+  }
+  .filter-pill {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: lowercase;
+    letter-spacing: 0.05em;
+    padding: 5px 12px;
+    border: 1px solid var(--rule);
+    color: var(--muted);
+    background: var(--parchment);
+    cursor: pointer;
+  }
+  .filter-pill.active {
+    border-color: var(--ink);
+    color: var(--ink);
+    background: var(--parchment);
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-area {
+    padding: 20px 24px;
+    border-top: 1px solid var(--rule);
+  }
+  .progress-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: lowercase;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .progress-track {
+    height: 2px;
+    background: var(--rule);
+    width: 100%;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 60%;
+    background: var(--ink);
+  }
+
+  /* footer */
+  .footer {
+    padding: 20px 32px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-text {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: lowercase;
+    letter-spacing: 0.05em;
+  }
+
+  @media (max-width: 700px) {
+    .grid { grid-template-columns: 1fr; }
+    .col-2, .col-3 { grid-column: span 1; }
+    .wordmark { font-size: 48px; }
+    .winner-name { font-size: 32px; }
+    .cards-area { flex-direction: column; align-items: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div>
+    <div class="wordmark">Hangri</div>
+  </div>
+  <div class="header-meta">
+    design system preview<br>
+    feb 2026<br>
+    v0.1
+  </div>
+</header>
+
+<!-- MAIN GRID -->
+<div class="grid">
+
+  <!-- SWIPE CARDS — col 2 -->
+  <div class="col-2">
+    <div class="section-label">swipe card states</div>
+    <div class="cards-area">
+      <!-- Neutral card -->
+      <div class="swipe-card">
+        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&q=80" alt="restaurant">
+        <div class="card-overlay"></div>
+        <div class="card-content">
+          <div class="card-name">Osteria<br>del Mare</div>
+          <div class="card-rule"></div>
+          <div class="card-meta">italian · $$$<br>4.6 · 0.4 mi away<br>open now</div>
+        </div>
+      </div>
+      <!-- YES card -->
+      <div class="swipe-card card-yes">
+        <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&q=80" alt="restaurant">
+        <div class="card-overlay"></div>
+        <div class="swipe-badge badge-yes">YES</div>
+        <div class="card-content">
+          <div class="card-name">Maison<br>Noir</div>
+          <div class="card-rule"></div>
+          <div class="card-meta">french · $$$$<br>4.8 · 1.1 mi away<br>open now</div>
+        </div>
+      </div>
+      <!-- NO card -->
+      <div class="swipe-card card-no">
+        <img src="https://images.unsplash.com/photo-1571997478779-2adcbbe9ab2f?w=400&q=80" alt="restaurant">
+        <div class="card-overlay"></div>
+        <div class="swipe-badge badge-no">NO</div>
+        <div class="card-content">
+          <div class="card-name">Ramen<br>Tanaka</div>
+          <div class="card-rule"></div>
+          <div class="card-meta">japanese · $$<br>4.4 · 0.8 mi away<br>open now</div>
+        </div>
+      </div>
+    </div>
+    <!-- progress -->
+    <div class="progress-area">
+      <div class="progress-label">
+        <span>swiping</span>
+        <span>6 of 10</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill"></div></div>
+    </div>
+    <!-- filter pills -->
+    <div class="filter-row">
+      <div class="filter-pill active">italian</div>
+      <div class="filter-pill active">french</div>
+      <div class="filter-pill">japanese</div>
+      <div class="filter-pill active">open now</div>
+      <div class="filter-pill">$$</div>
+      <div class="filter-pill active">$$$</div>
+      <div class="filter-pill">$$$$</div>
+      <div class="filter-pill">4.0+</div>
+    </div>
+  </div>
+
+  <!-- PALETTE — col 1 -->
+  <div>
+    <div class="section-label">colour palette</div>
+    <div class="palette-area">
+      <div class="swatches">
+        <div class="swatch">
+          <div class="swatch-dot" style="background:#F5F0E8;"></div>
+          <div class="swatch-name">background</div>
+          <div class="swatch-hex">#F5F0E8</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-dot" style="background:#EDE8DE;"></div>
+          <div class="swatch-name">surface</div>
+          <div class="swatch-hex">#EDE8DE</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-dot" style="background:#1A1714; border-color: #444;"></div>
+          <div class="swatch-name">ink</div>
+          <div class="swatch-hex">#1A1714</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-dot" style="background:#8C8278;"></div>
+          <div class="swatch-name">muted</div>
+          <div class="swatch-hex">#8C8278</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-dot" style="background:#C8C0B4;"></div>
+          <div class="swatch-name">rule</div>
+          <div class="swatch-hex">#C8C0B4</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-dot" style="background:#C17F3E;"></div>
+          <div class="swatch-name">accent</div>
+          <div class="swatch-hex">#C17F3E</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-dot" style="background:#4A5240;"></div>
+          <div class="swatch-name">swipe yes</div>
+          <div class="swatch-hex">#4A5240</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-dot" style="background:#8B3A2A;"></div>
+          <div class="swatch-name">swipe no</div>
+          <div class="swatch-hex">#8B3A2A</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TYPOGRAPHY -->
+  <div>
+    <div class="section-label">typography</div>
+    <div class="type-area">
+      <div class="type-specimen">
+        <div class="type-tag">display · cormorant garamond 300</div>
+        <div class="t-display">where to<br>eat</div>
+      </div>
+      <div class="type-specimen">
+        <div class="type-tag">heading · cormorant garamond 600</div>
+        <div class="t-h1">Pick a Place</div>
+      </div>
+      <div class="type-specimen">
+        <div class="type-tag">body · ibm plex mono 400</div>
+        <div class="t-body">swipe through restaurants near you. right for yes, left for no. we'll sort out the rest.</div>
+      </div>
+      <div class="type-specimen">
+        <div class="type-tag">label · ibm plex mono 500</div>
+        <div class="t-label">0.4 mi · italian · $$$  · 4.6 rating · open now</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- UI COMPONENTS -->
+  <div class="col-2">
+    <div class="section-label">ui components</div>
+    <div class="ui-area">
+      <div class="ui-title">buttons</div>
+      <div class="btn-row">
+        <button class="btn btn-primary">start swiping</button>
+        <button class="btn btn-secondary">set filters</button>
+        <button class="btn btn-accent">see winner</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-yes">YES</button>
+        <button class="btn btn-no">NO</button>
+        <button class="btn btn-secondary">start group session</button>
+        <button class="btn btn-secondary">solo mode</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WINNER REVEAL — full width -->
+  <div class="col-3" style="border:none;">
+    <div class="section-label">winner reveal state</div>
+    <div class="winner-strip">
+      <div>
+        <div class="winner-label">tonight you're eating at</div>
+        <div class="winner-name">Maison<br>Noir</div>
+      </div>
+      <div class="winner-meta">
+        french · $$$$<br>
+        4.8 rating · 1.1 mi<br>
+        open until 11pm<br>
+        <br>
+        <span style="color: var(--amber); letter-spacing:0.06em;">get directions →</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-text">hangri · design system · v0.1</div>
+  <div class="footer-text">cormorant garamond + ibm plex mono</div>
+</footer>
+
+</body>
+</html>
