@@ -1,31 +1,31 @@
 import type { Filters, Restaurant } from '@/types'
 
 const API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY
-const BASE_URL = 'https://maps.googleapis.com/maps/api/place'
+const BASE_URL = 'https://places.googleapis.com/v1'
 
-interface PlacesNearbyResult {
-  place_id: string
-  name: string
+// ─── New Places API (New) response types ───────────────────────────────────────
+
+interface PlaceResult {
+  id: string
+  displayName: { text: string; languageCode: string }
+  formattedAddress: string
   rating?: number
-  user_ratings_total?: number
-  price_level?: number
+  userRatingCount?: number
+  priceLevel?: string // enum: PRICE_LEVEL_FREE | INEXPENSIVE | MODERATE | EXPENSIVE | VERY_EXPENSIVE
   types: string[]
-  vicinity: string
-  opening_hours?: { open_now: boolean }
-  photos?: { photo_reference: string }[]
-  geometry: { location: { lat: number; lng: number } }
+  photos?: { name: string; widthPx: number; heightPx: number }[]
+  currentOpeningHours?: { openNow: boolean }
+  location: { latitude: number; longitude: number }
 }
 
 interface PlacesNearbyResponse {
-  results: PlacesNearbyResult[]
-  status: string
-  next_page_token?: string
+  places: PlaceResult[]
 }
 
 // ─── Utility ───────────────────────────────────────────────────────────────────
 
-function getPhotoUrl(photoReference: string): string {
-  return `${BASE_URL}/photo?maxwidth=800&photo_reference=${photoReference}&key=${API_KEY}`
+function getPhotoUrl(photoName: string): string {
+  return `${BASE_URL}/${photoName}/media?maxWidthPx=800&key=${API_KEY}`
 }
 
 function haversineDistance(
@@ -34,7 +34,7 @@ function haversineDistance(
   lat2: number,
   lng2: number
 ): number {
-  const R = 6371000 // Earth radius in meters
+  const R = 6371000
   const φ1 = (lat1 * Math.PI) / 180
   const φ2 = (lat2 * Math.PI) / 180
   const Δφ = ((lat2 - lat1) * Math.PI) / 180
@@ -45,19 +45,36 @@ function haversineDistance(
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-const CUISINE_TYPES = [
+const GENERIC_TYPES = new Set([
   'restaurant',
+  'food',
+  'point_of_interest',
+  'establishment',
   'cafe',
-  'bakery',
   'bar',
   'meal_takeaway',
   'meal_delivery',
-]
+])
 
 function normalizeCuisine(types: string[]): string[] {
-  const known = new Set(CUISINE_TYPES)
-  return types.filter((t) => !known.has(t)).slice(0, 3)
+  return types.filter((t) => !GENERIC_TYPES.has(t)).slice(0, 3)
 }
+
+const PRICE_LEVEL_MAP: Record<string, number> = {
+  PRICE_LEVEL_FREE: 0,
+  PRICE_LEVEL_INEXPENSIVE: 1,
+  PRICE_LEVEL_MODERATE: 2,
+  PRICE_LEVEL_EXPENSIVE: 3,
+  PRICE_LEVEL_VERY_EXPENSIVE: 4,
+}
+
+const PRICE_LEVEL_ENUM = [
+  'PRICE_LEVEL_FREE',
+  'PRICE_LEVEL_INEXPENSIVE',
+  'PRICE_LEVEL_MODERATE',
+  'PRICE_LEVEL_EXPENSIVE',
+  'PRICE_LEVEL_VERY_EXPENSIVE',
+]
 
 // ─── API ───────────────────────────────────────────────────────────────────────
 
@@ -67,55 +84,76 @@ export async function fetchNearbyRestaurants(
   filters: Filters,
   count = 10
 ): Promise<Restaurant[]> {
-  const params = new URLSearchParams({
-    location: `${lat},${lng}`,
-    radius: String(filters.radius),
-    type: 'restaurant',
-    key: API_KEY,
+  const body: Record<string, unknown> = {
+    maxResultCount: Math.min(count, 20),
+    rankPreference: 'DISTANCE',
+    locationRestriction: {
+      circle: {
+        center: { latitude: lat, longitude: lng },
+        radius: filters.radius,
+      },
+    },
+  }
+
+  // Cuisine filter maps to includedTypes; fall back to generic restaurant
+  body.includedTypes = filters.cuisine.length > 0 ? filters.cuisine : ['restaurant']
+
+  if (filters.openNow) {
+    body.openNow = true
+  }
+
+  // Map numeric price levels [1,2,3,4] to API enum strings
+  if (filters.priceLevel.length > 0 && filters.priceLevel.length < 4) {
+    body.priceLevels = filters.priceLevel.map((n) => PRICE_LEVEL_ENUM[n]).filter(Boolean)
+  }
+
+  const res = await fetch(`${BASE_URL}/places:searchNearby`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': API_KEY,
+      'X-Goog-FieldMask': [
+        'places.id',
+        'places.displayName',
+        'places.formattedAddress',
+        'places.rating',
+        'places.userRatingCount',
+        'places.priceLevel',
+        'places.types',
+        'places.photos',
+        'places.currentOpeningHours',
+        'places.location',
+      ].join(','),
+    },
+    body: JSON.stringify(body),
   })
 
-  if (filters.openNow) params.set('opennow', 'true')
-
-  if (filters.priceLevel.length > 0 && filters.priceLevel.length < 4) {
-    params.set('minprice', String(Math.min(...filters.priceLevel) - 1))
-    params.set('maxprice', String(Math.max(...filters.priceLevel) - 1))
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Places API error ${res.status}: ${text}`)
   }
-
-  if (filters.cuisine.length > 0) {
-    // nearbySearch only supports a single keyword; join cuisine for a rough filter
-    params.set('keyword', filters.cuisine.join(' '))
-  }
-
-  const url = `${BASE_URL}/nearbysearch/json?${params.toString()}`
-
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`Places API error: ${res.status}`)
 
   const data: PlacesNearbyResponse = await res.json()
+  const places = data.places ?? []
 
-  if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-    throw new Error(`Places API status: ${data.status}`)
-  }
-
-  const results = data.results
-    .filter((r) => (r.rating ?? 0) >= filters.minRating)
+  return places
+    .filter((p) => (p.rating ?? 0) >= filters.minRating)
     .slice(0, count)
-
-  return results.map((r): Restaurant => ({
-    id: r.place_id,
-    name: r.name,
-    photoUrl: r.photos?.[0]
-      ? getPhotoUrl(r.photos[0].photo_reference)
-      : 'https://placehold.co/800x600/EDE8DE/8C8278?text=no+photo',
-    rating: r.rating ?? 0,
-    userRatingsTotal: r.user_ratings_total ?? 0,
-    priceLevel: r.price_level ?? 0,
-    cuisine: normalizeCuisine(r.types),
-    address: r.vicinity,
-    isOpenNow: r.opening_hours?.open_now ?? false,
-    distance: haversineDistance(lat, lng, r.geometry.location.lat, r.geometry.location.lng),
-    location: r.geometry.location,
-  }))
+    .map((p): Restaurant => ({
+      id: p.id,
+      name: p.displayName.text,
+      photoUrl: p.photos?.[0]
+        ? getPhotoUrl(p.photos[0].name)
+        : 'https://placehold.co/800x600/EDE8DE/8C8278?text=no+photo',
+      rating: p.rating ?? 0,
+      userRatingsTotal: p.userRatingCount ?? 0,
+      priceLevel: PRICE_LEVEL_MAP[p.priceLevel ?? ''] ?? 0,
+      cuisine: normalizeCuisine(p.types),
+      address: p.formattedAddress,
+      isOpenNow: p.currentOpeningHours?.openNow ?? false,
+      distance: haversineDistance(lat, lng, p.location.latitude, p.location.longitude),
+      location: { lat: p.location.latitude, lng: p.location.longitude },
+    }))
 }
 
 export function formatPriceLevel(level: number): string {

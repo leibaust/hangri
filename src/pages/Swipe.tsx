@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CardStack } from '@/components/cards/CardStack'
 import { Button } from '@/components/ui/Button'
@@ -17,14 +17,14 @@ export function Swipe() {
   const { data: restaurants, isLoading, error } = usePlaces({ lat, lng, filters })
 
   const [deck, setDeck] = useState<typeof restaurants>()
-  const initialized = deck !== undefined
 
-  // Initialize deck when data arrives
-  if (restaurants && !initialized) {
+  // Initialize deck when data arrives — must be in an effect, not render body
+  useEffect(() => {
+    if (!restaurants) return
     setDeck(restaurants)
     setRestaurants(restaurants)
     resetSwipes()
-  }
+  }, [restaurants]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSwipe = (restaurantId: string, liked: boolean) => {
     addSwipeResult({ restaurantId, liked })
@@ -53,10 +53,22 @@ export function Swipe() {
     return <StatusScreen message="fetching restaurants..." />
   }
 
-  if (error || !deck) {
+  if (error) {
     return (
-      <StatusScreen message="could not load restaurants">
+      <StatusScreen message={`error: ${(error as Error).message}`}>
         <Button onClick={() => navigate('/')} variant="secondary">back</Button>
+      </StatusScreen>
+    )
+  }
+
+  if (!deck) {
+    return <StatusScreen message="preparing..." />
+  }
+
+  if (deck.length === 0) {
+    return (
+      <StatusScreen message="no restaurants found nearby">
+        <Button onClick={() => navigate('/')} variant="secondary">adjust filters</Button>
       </StatusScreen>
     )
   }

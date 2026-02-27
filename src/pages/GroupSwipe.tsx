@@ -61,7 +61,9 @@ export function GroupSwipe() {
     <div className="min-h-screen bg-parchment flex flex-col">
       {/* Header */}
       <div className="border-b border-rule px-4 py-4 flex items-center justify-between pt-safe-top">
-        <p className="font-mono text-label text-muted">group swipe</p>
+        <button onClick={() => navigate('/')} className="font-mono text-label text-muted">
+          ← leave
+        </button>
         <p className="font-mono text-micro text-muted">
           {doneCount}/{participants.length} done
         </p>

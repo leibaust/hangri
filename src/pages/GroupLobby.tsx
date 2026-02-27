@@ -42,6 +42,11 @@ export function GroupLobby() {
       )
       setRestaurants(restaurants)
 
+      if (restaurants.length === 0) {
+        setError('no restaurants found nearby — try adjusting filters or increasing radius')
+        return
+      }
+
       const name = displayName.trim() || 'host'
       setDisplayName(name)
 
